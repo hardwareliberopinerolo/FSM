@@ -1,0 +1,198 @@
+/*
+ The circuit:
+ * pushbutton attached to pin 2 from +5V
+ * 10K resistor attached to pin 2 from ground
+ * LED attached from pin 13 to ground (or use the built-in LED on
+   most Arduino boards)
+
+ */
+
+// this constant won't change:
+const byte ledPin = 13;      // the pin that the LED is attached to
+const byte interruptPin = 2; // the pin that the pushbutton is attached to
+
+
+// Variables will change:
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
+byte led_state = LOW;
+volatile int FSM_state = 0;
+
+#define DEBOUNCE_DELAY 100 // in ms
+
+volatile uint32_t last_interrupt_time = 0;
+
+
+//------------------------------------------------------------------------------
+void setup() {
+  // initialize the button pin as a input:
+  pinMode(interruptPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, RISING);
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink, FALLING);
+   
+  // initialize the LED as an output:
+  pinMode(ledPin, OUTPUT);
+    digitalWrite(ledPin, led_state);
+  // initialize serial communication:
+  Serial.begin(9600);
+}
+
+//------------------------------------------------------------------------------
+void loop() {
+	switch(FSM_state){
+	case 0: 
+	break;
+  
+	case 1: 
+  //detachInterrupt(digitalPinToInterrupt(interruptPin));
+
+  botton_status();
+	break;
+
+  case 2: 
+  //led_state = !led_state;
+  FSM_state=3;
+  break;
+  
+	case 3: 
+	led_on();
+	FSM_state=0;
+	break;
+  
+  //default:
+  
+  }
+}
+
+//------------------------------------------------------------------------------
+void blink_ISR() {
+//Debounce Routine  
+  uint32_t interrupt_time = millis();
+  if (interrupt_time - last_interrupt_time > DEBOUNCE_DELAY) {
+  FSM_state = 1;
+  }
+  last_interrupt_time = interrupt_time;
+
+  }
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+void botton_status(){
+   Serial.println("Int OFF");
+   Serial.println("Status 1");
+   Serial.println("Botton Pressed...");
+      // read the pushbutton input pin:
+  buttonState = digitalRead(interruptPin);
+     if (buttonState == HIGH) {
+    led_state = !led_state;
+    buttonPushCounter++;
+   Serial.print("Bottone Premuto: ");
+   Serial.println(buttonPushCounter);
+    FSM_state=2;
+     }
+    else {
+      led_null();
+      }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+void led_on(){
+  Serial.println("Status 3");
+  digitalWrite(ledPin, led_state);
+  Serial.print("Led status: ");
+  Serial.println(led_state);
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, RISING);
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, CHANGE);
+  Serial.println("Int ON");
+}
+//------------------------------------------------------------------------------
+
+void led_null(){
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, RISING);
+  //attachInterrupt(digitalPinToInterrupt(interruptPin), blink_ISR, CHANGE);
+FSM_state=0;
+}
+//------------------------------------------------------------------------------
+
+/*
+
+
+  // read the pushbutton input pin:
+  buttonState = digitalRead(buttonPin);
+
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button
+      // wend from off to on:
+      buttonPushCounter++;
+      Serial.println("on");
+      Serial.print("number of button pushes:  ");
+      Serial.println(buttonPushCounter);
+    } else {
+      // if the current state is LOW then the button
+      // wend from on to off:
+      Serial.println("off");
+    }
+    // Delay a little bit to avoid bouncing
+    delay(50);
+  }
+  // save the current state as the last state,
+  //for next time through the loop
+  lastButtonState = buttonState;
+
+
+  // turns on the LED every four button pushes by
+  // checking the modulo of the button push counter.
+  // the modulo function gives you the remainder of
+  // the division of two numbers:
+  if (buttonPushCounter % 4 == 0) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+*/
+
+
+/*
+#include <EnableInterrupt.h>
+
+#define BUTTON_PIN 5
+#define DEBOUNCE_DELAY 100 // in ms
+
+uint32_t last_interrupt_time = 0;
+uint8_t led_status = 0;
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  enableInterrupt(BUTTON_PIN, isr_handler, RISING);
+}
+
+void loop() {
+  // zZz
+}
+
+void isr_handler() {
+  uint32_t interrupt_time = millis();
+
+  if (interrupt_time - last_interrupt_time > DEBOUNCE_DELAY) {
+    led_status = !led_status;
+    digitalWrite(LED_BUILTIN, led_status);
+  }
+
+  last_interrupt_time = interrupt_time;
+} 
+ */
+
+
+
+
+
